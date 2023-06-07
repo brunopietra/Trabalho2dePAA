@@ -8,7 +8,7 @@ import java.lang.Math;
 public class AlgoritmoForcaBruta {
 
     static List<Loja> melhorRota = new ArrayList<>();
-    static double gasolinaGastaMelhorCaso = 100000000;
+    static double gastoGasolinaMelhorCaso = 100000000;
     static Caminhao caminhao = new Caminhao();
 
     public static void main(String[] args) {
@@ -25,7 +25,7 @@ public class AlgoritmoForcaBruta {
             System.out.print(loja.getId() + " ");
         }
 
-        System.out.println("\nGato de gasolina na melhor rota: " + String.format("%.2f", gasolinaGastaMelhorCaso) + " litros");
+        System.out.println("\nGasto de gasolina na melhor rota: " + String.format("%.2f", gastoGasolinaMelhorCaso) + " litros");
 
         long tempoFinal = System.currentTimeMillis();
 
@@ -43,8 +43,8 @@ public class AlgoritmoForcaBruta {
             rota.add(lojas.get(0));
             caminhao.atualizarCarga(lojas.get(0));
             if(caminhao.getCargaAtual().size() == 0){
-                if(gastoGasolina < gasolinaGastaMelhorCaso){
-                    gasolinaGastaMelhorCaso = gastoGasolina;
+                if(gastoGasolina < gastoGasolinaMelhorCaso){
+                    gastoGasolinaMelhorCaso = gastoGasolina;
                     melhorRota = new ArrayList<>();
                     melhorRota.addAll(rota);
                 }
@@ -53,7 +53,6 @@ public class AlgoritmoForcaBruta {
             rota.remove(rota.size() -1);
             caminhao.resetarCarga();
 
-            return;
         }
 
         for(int i = 1; i < lojas.size(); i++){
@@ -62,7 +61,7 @@ public class AlgoritmoForcaBruta {
                 caminhao.atualizarCarga(lojas.get(i));
                 double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
 
-                if(caminhao.getCargaAtual().size() < 3){
+                if(caminhao.getCargaAtual().size() <= 3){
                     calcularMelhorRota(rota, novoGastoGasolina, lojas);
                 }
 
@@ -77,9 +76,10 @@ public class AlgoritmoForcaBruta {
 
     
     public static double calcularGastoGasolinaAdicional(Loja l1, Loja l2){
-        double pitagoras = Math.sqrt(Math.pow(l1.getCoordenadaX(), 2) + Math.pow(l1.getCoordenadaY(), 2) - (Math.sqrt(Math.pow(l2.getCoordenadaX(), 2) + Math.pow(l2.getCoordenadaY(), 2))));
+        double pitagoras = Math.sqrt(Math.pow(l1.getCoordenadaX() - l2.getCoordenadaX(), 2) + Math.pow(l1.getCoordenadaY() - l2.getCoordenadaY(), 2));
+
         
-        double gastoGasolina = pitagoras / (10 - 0.5 * caminhao.getCargaAtual().size()); 
+        double gastoGasolina = pitagoras / (10 - (0.5 * caminhao.getCargaAtual().size())); 
 
         return gastoGasolina;
     }
