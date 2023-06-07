@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.lang.Math;
 
-public class AlgoritmoForcaBruta {
+public class AlgoritmoBranchAndBound {
 
     static List<Loja> melhorRota = new ArrayList<>();
     static double gastoGasolinaMelhorCaso = 100000000;
@@ -18,8 +18,8 @@ public class AlgoritmoForcaBruta {
 
         List<Loja> lojas = lerArquivo("lojas.txt");
         
-        boolean estourouCarga = false;
-        calcularMelhorRota(new ArrayList<>(), 0, lojas, estourouCarga);
+
+        calcularMelhorRota(new ArrayList<>(), 0, lojas);
 
         System.out.print("\nMelhor rota: ");
         for (Loja loja : melhorRota){
@@ -28,17 +28,6 @@ public class AlgoritmoForcaBruta {
 
         System.out.println("\nGasto de gasolina na melhor rota: " + String.format("%.2f", gastoGasolinaMelhorCaso) + " litros");
 
-        System.out.println("Gasto de gasolina ao longo do percurso: ");
-        caminhao.zerarCarga();
-        caminhao.atualizarCarga(melhorRota.get(0));
-        double gastoGasolinaPorPercurso = 0;
-        for (int i = 1; i < melhorRota.size(); i++){
-            gastoGasolinaPorPercurso += calcularGastoGasolinaAdicional(melhorRota.get(i), melhorRota.get(i - 1));
-            System.out.print("|"+ melhorRota.get(i - 1).getId() + " " + melhorRota.get(i).getId() + "| = ");
-            System.out.println(String.format("%.2f", gastoGasolinaPorPercurso));
-            caminhao.atualizarCarga(melhorRota.get(i));
-        }
-
         long tempoFinal = System.currentTimeMillis();
 
         long tempoTotal = tempoFinal - tempoInicial;
@@ -46,7 +35,7 @@ public class AlgoritmoForcaBruta {
         System.out.println("Tempo de execução: " + tempoTotal + " milissegundos");
     }
 
-    public static void calcularMelhorRota(List<Loja> rota, double gastoGasolina, List<Loja> lojas, boolean estourouCarga){
+    public static void calcularMelhorRota(List<Loja> rota, double gastoGasolina, List<Loja> lojas){
         if(rota.size() == 0){
             rota.add(lojas.get(0));
         }
@@ -54,18 +43,17 @@ public class AlgoritmoForcaBruta {
         if(rota.size() == lojas.size()){
             
             rota.add(lojas.get(0));
-            double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
+            gastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
             caminhao.atualizarCarga(lojas.get(0));
 
-            if(caminhao.getCargaAtual().size() == 0 && !estourouCarga){
-                if(novoGastoGasolina < gastoGasolinaMelhorCaso){
-                    gastoGasolinaMelhorCaso = novoGastoGasolina;
+            if(caminhao.getCargaAtual().size() == 0){
+                if(gastoGasolina < gastoGasolinaMelhorCaso){
+                    gastoGasolinaMelhorCaso = gastoGasolina;
                     melhorRota = new ArrayList<>();
                     melhorRota.addAll(rota);
 
                 }
             }
-
 
             rota.remove(rota.size() -1);
             caminhao.resetarCarga();
@@ -78,11 +66,10 @@ public class AlgoritmoForcaBruta {
                 double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
                 caminhao.atualizarCarga(lojas.get(i));
 
-                if(caminhao.getCargaAtual().size() > 3){
-                    estourouCarga = true;
+                if(caminhao.getCargaAtual().size() <= 3){
+                    calcularMelhorRota(rota, novoGastoGasolina, lojas);
                 }
 
-                calcularMelhorRota(rota, novoGastoGasolina, lojas, estourouCarga);
 
                 rota.remove(rota.size() -1);
 
@@ -92,19 +79,6 @@ public class AlgoritmoForcaBruta {
         }
         
     }
-
-    private static boolean verificarSequenciaDesejada(List<Loja> rota, List<Integer> sequenciaDesejada) {
-        if (rota.size() != sequenciaDesejada.size()) {
-            return false;
-        }
-        for (int i = 0; i < rota.size(); i++) {
-            if (rota.get(i).getId() != sequenciaDesejada.get(i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     
     private static double calcularGastoGasolinaAdicional(Loja l1, Loja l2){
         double pitagoras = Math.sqrt(Math.pow(l1.getCoordenadaX() - l2.getCoordenadaX(), 2) + Math.pow(l1.getCoordenadaY() - l2.getCoordenadaY(), 2));
@@ -143,7 +117,3 @@ public class AlgoritmoForcaBruta {
         return lojas;
     }
 }
-
-
-
-
