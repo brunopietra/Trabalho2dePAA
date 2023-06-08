@@ -7,19 +7,24 @@ import java.lang.Math;
 
 public class AlgoritmoForcaBruta {
 
+    static int k = 3;
+
     static List<Loja> melhorRota = new ArrayList<>();
     static double gastoGasolinaMelhorCaso = 100000000;
+    static List<Double> gastoGasolinaPorEstrada = new ArrayList<>();
     static Caminhao caminhao = new Caminhao();
 
     public static void main(String[] args) {
         long tempoInicial = System.currentTimeMillis();
 
-        System.out.println("Branch and Bound!");
+        System.out.println("Forca Bruta!");
 
         List<Loja> lojas = lerArquivo("lojas.txt");
         
         boolean estourouCarga = false;
         calcularMelhorRota(new ArrayList<>(), 0, lojas, estourouCarga);
+
+        setGastoGasolinaPorEstrada();
 
         System.out.print("\nMelhor rota: ");
         for (Loja loja : melhorRota){
@@ -29,14 +34,9 @@ public class AlgoritmoForcaBruta {
         System.out.println("\nGasto de gasolina na melhor rota: " + String.format("%.2f", gastoGasolinaMelhorCaso) + " litros");
 
         System.out.println("Gasto de gasolina ao longo do percurso: ");
-        caminhao.zerarCarga();
-        caminhao.atualizarCarga(melhorRota.get(0));
-        double gastoGasolinaPorPercurso = 0;
-        for (int i = 1; i < melhorRota.size(); i++){
-            gastoGasolinaPorPercurso += calcularGastoGasolinaAdicional(melhorRota.get(i), melhorRota.get(i - 1));
-            System.out.print("|"+ melhorRota.get(i - 1).getId() + " " + melhorRota.get(i).getId() + "| = ");
-            System.out.println(String.format("%.2f", gastoGasolinaPorPercurso));
-            caminhao.atualizarCarga(melhorRota.get(i));
+
+        for (double gastoGasolina : gastoGasolinaPorEstrada){
+            System.out.println(gastoGasolina);
         }
 
         long tempoFinal = System.currentTimeMillis();
@@ -44,68 +44,57 @@ public class AlgoritmoForcaBruta {
         long tempoTotal = tempoFinal - tempoInicial;
 
         System.out.println("Tempo de execução: " + tempoTotal + " milissegundos");
+
+        Grafico grafico = new Grafico(melhorRota, gastoGasolinaMelhorCaso, gastoGasolinaPorEstrada);
+
     }
 
     public static void calcularMelhorRota(List<Loja> rota, double gastoGasolina, List<Loja> lojas, boolean estourouCarga){
-        if(rota.size() == 0){
+        if (rota.size() == 0){
             rota.add(lojas.get(0));
         }
-
-        if(rota.size() == lojas.size()){
-            
+    
+        if (rota.size() == lojas.size()){
             rota.add(lojas.get(0));
-            double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
+            double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() - 2));
             caminhao.atualizarCarga(lojas.get(0));
-
-            if(caminhao.getCargaAtual().size() == 0 && !estourouCarga){
-                if(novoGastoGasolina < gastoGasolinaMelhorCaso){
+    
+            if (caminhao.getCargaAtual().size() == 0 && !estourouCarga){
+                if (novoGastoGasolina < gastoGasolinaMelhorCaso){
                     gastoGasolinaMelhorCaso = novoGastoGasolina;
-                    melhorRota = new ArrayList<>();
-                    melhorRota.addAll(rota);
-
+                    melhorRota = new ArrayList<>(rota);
                 }
             }
-
-
-            rota.remove(rota.size() -1);
-            caminhao.resetarCarga();
-
+    
+            rota.remove(rota.size() - 1);
+            caminhao.setCargaAtual(new ArrayList<>());
         }
-
-        for(int i = 1; i < lojas.size(); i++){
-            if(!rota.contains(lojas.get(i))){
+    
+        for (int i = 1; i < lojas.size(); i++){
+            if (!rota.contains(lojas.get(i))){
                 rota.add(lojas.get(i));
-                double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() -2));
+                double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() - 2));
+                
+    
+                Caminhao cargaAnterior = new Caminhao();
+                cargaAnterior.setCargaAtual(new ArrayList<>(caminhao.getCargaAtual()));
+    
                 caminhao.atualizarCarga(lojas.get(i));
-
-                if(caminhao.getCargaAtual().size() > 3){
+    
+                if (caminhao.getCargaAtual().size() > k){
                     estourouCarga = true;
                 }
-
+    
                 calcularMelhorRota(rota, novoGastoGasolina, lojas, estourouCarga);
-
-                rota.remove(rota.size() -1);
-
-                caminhao.resetarCarga();
-
+                
+    
+                caminhao.setCargaAtual(new ArrayList<>(cargaAnterior.getCargaAtual()));
+                rota.remove(rota.size() - 1);
+                estourouCarga = false;
             }
         }
-        
     }
 
-    private static boolean verificarSequenciaDesejada(List<Loja> rota, List<Integer> sequenciaDesejada) {
-        if (rota.size() != sequenciaDesejada.size()) {
-            return false;
-        }
-        for (int i = 0; i < rota.size(); i++) {
-            if (rota.get(i).getId() != sequenciaDesejada.get(i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    
     private static double calcularGastoGasolinaAdicional(Loja l1, Loja l2){
         double pitagoras = Math.sqrt(Math.pow(l1.getCoordenadaX() - l2.getCoordenadaX(), 2) + Math.pow(l1.getCoordenadaY() - l2.getCoordenadaY(), 2));
 
@@ -113,6 +102,17 @@ public class AlgoritmoForcaBruta {
         double gastoGasolina = pitagoras / (10 - (0.5 * caminhao.getCargaAtual().size())); 
 
         return gastoGasolina;
+    }
+
+    public static void setGastoGasolinaPorEstrada(){
+        caminhao.setCargaAtual(new ArrayList<>());
+        caminhao.atualizarCarga(melhorRota.get(0));
+        double gastoGasolina = 0;
+        for (int i = 1; i < melhorRota.size(); i++){
+            gastoGasolina = calcularGastoGasolinaAdicional(melhorRota.get(i), melhorRota.get(i - 1));
+            gastoGasolinaPorEstrada.add(gastoGasolina);
+            caminhao.atualizarCarga(melhorRota.get(i));
+        }
     }
     
     public static List<Loja> lerArquivo(String nomeArquivo) {
