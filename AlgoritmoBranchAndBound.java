@@ -14,15 +14,16 @@ public class AlgoritmoBranchAndBound {
     static List<Double> gastoGasolinaPorEstrada = new ArrayList<>();
     static Caminhao caminhao = new Caminhao();
 
+    static List<Integer> lojasNãoAutorizadas = new ArrayList<>();
+
     public static void main(String[] args) {
         long tempoInicial = System.currentTimeMillis();
 
         System.out.println("Branch and Bound!");
 
         List<Loja> lojas = lerArquivo("lojas.txt");
-        
-        calcularMelhorRota(new ArrayList<>(), 0, lojas);
 
+        calcularMelhorRota(new ArrayList<>(), 0, lojas);
         setGastoGasolinaPorEstrada();
 
         System.out.print("\nMelhor rota: ");
@@ -52,6 +53,8 @@ public class AlgoritmoBranchAndBound {
         if (rota.size() == 0){
             rota.add(lojas.get(0));
         }
+
+        
     
         if (rota.size() == lojas.size()){
             rota.add(lojas.get(0));
@@ -70,19 +73,28 @@ public class AlgoritmoBranchAndBound {
         }
     
         for (int i = 1; i < lojas.size(); i++){
-            if (!rota.contains(lojas.get(i))){
+            if (!rota.contains(lojas.get(i)) && !lojasNãoAutorizadas.contains(lojas.get(i).getId())){
+
                 rota.add(lojas.get(i));
                 double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() - 2));
                 
     
                 Caminhao cargaAnterior = new Caminhao();
                 cargaAnterior.setCargaAtual(new ArrayList<>(caminhao.getCargaAtual()));
-    
+
                 caminhao.atualizarCarga(lojas.get(i));
+
+                List<Integer> lojasNaoAutorizadasVersaoAnterior = new ArrayList<>(lojasNãoAutorizadas);
+                for (Integer elemento : caminhao.getCargaAtual()) {
+                    lojasNãoAutorizadas.remove(elemento);
+                }
+
     
                 if (caminhao.getCargaAtual().size() <= k && novoGastoGasolina < gastoGasolinaMelhorCaso){
                     calcularMelhorRota(rota, novoGastoGasolina, lojas);
                 }
+
+                lojasNãoAutorizadas = new ArrayList<>(lojasNaoAutorizadasVersaoAnterior);
     
                 caminhao.setCargaAtual(new ArrayList<>(cargaAnterior.getCargaAtual()));
                 rota.remove(rota.size() - 1);
@@ -126,6 +138,7 @@ public class AlgoritmoBranchAndBound {
                 
                 for (int i = 3; i < partes.length; i++) {
                     lojasReceber.add(Integer.parseInt(partes[i]));
+                    lojasNãoAutorizadas.add(Integer.parseInt(partes[i]));
                 }
                 
                 Loja loja = new Loja(id, coordenadaX, coordenadaY, lojasReceber);
@@ -138,7 +151,6 @@ public class AlgoritmoBranchAndBound {
         return lojas;
     }
 }
-
 
 
 

@@ -28,4 +28,5 @@ public class Loja {
     public List<Integer> getLojasReceber() {
         return lojasReceber;
     }
+   
 }

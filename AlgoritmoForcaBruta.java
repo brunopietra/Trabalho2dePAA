@@ -14,6 +14,7 @@ public class AlgoritmoForcaBruta {
     static List<Double> gastoGasolinaPorEstrada = new ArrayList<>();
     static Caminhao caminhao = new Caminhao();
 
+    
     public static void main(String[] args) {
         long tempoInicial = System.currentTimeMillis();
 
@@ -76,8 +77,8 @@ public class AlgoritmoForcaBruta {
                 double novoGastoGasolina = gastoGasolina + calcularGastoGasolinaAdicional(rota.get(rota.size() - 1), rota.get(rota.size() - 2));
                 
     
-                Caminhao cargaAnterior = new Caminhao();
-                cargaAnterior.setCargaAtual(new ArrayList<>(caminhao.getCargaAtual()));
+                Caminhao caminhaoVersaoAnterior = new Caminhao();
+                caminhaoVersaoAnterior.setCargaAtual(new ArrayList<>(caminhao.getCargaAtual()));
     
                 caminhao.atualizarCarga(lojas.get(i));
     
@@ -88,7 +89,7 @@ public class AlgoritmoForcaBruta {
                 calcularMelhorRota(rota, novoGastoGasolina, lojas, estourouCarga);
                 
     
-                caminhao.setCargaAtual(new ArrayList<>(cargaAnterior.getCargaAtual()));
+                caminhao.setCargaAtual(new ArrayList<>(caminhaoVersaoAnterior.getCargaAtual()));
                 rota.remove(rota.size() - 1);
                 estourouCarga = false;
             }
@@ -114,6 +115,8 @@ public class AlgoritmoForcaBruta {
             caminhao.atualizarCarga(melhorRota.get(i));
         }
     }
+
+    
     
     public static List<Loja> lerArquivo(String nomeArquivo) {
         List<Loja> lojas = new ArrayList<>();
@@ -131,6 +134,7 @@ public class AlgoritmoForcaBruta {
                 
                 for (int i = 3; i < partes.length; i++) {
                     lojasReceber.add(Integer.parseInt(partes[i]));
+                    
                 }
                 
                 Loja loja = new Loja(id, coordenadaX, coordenadaY, lojasReceber);
